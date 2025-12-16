@@ -21,9 +21,10 @@ export class Game extends Scene {
 	spawnManager: SpawnManager;
 
 	// Player stats
-	playerHealth: number = 100;
-	maxPlayerHealth: number = 100;
-	healthText: Phaser.GameObjects.Text;
+	readonly PLAYER_STARTING_HEALTH = 5;
+	playerHealth: number = this.PLAYER_STARTING_HEALTH;
+	maxPlayerHealth: number = this.PLAYER_STARTING_HEALTH;
+	heartIcons: Phaser.GameObjects.Image[] = [];
 
 	// World size
 	readonly WORLD_WIDTH = 3200;
@@ -35,11 +36,16 @@ export class Game extends Scene {
 	}
 
 	create() {
+		// Reset state for scene restart
+		this.attacks = [];
+		this.heartIcons = [];
+		this.playerHealth = this.PLAYER_STARTING_HEALTH;
+
 		// Set world bounds
 		this.physics.world.setBounds(0, 0, this.WORLD_WIDTH, this.WORLD_HEIGHT);
 
-		// Create grass background using tiled graphics
-		this.createGrassBackground();
+		// Create background
+		this.createBackground();
 
 		// Create player in the center of the world
 		this.player = this.physics.add.sprite(
@@ -135,21 +141,23 @@ export class Game extends Scene {
 	}
 
 	setupUI() {
-		// Health display (fixed to camera)
-		this.healthText = this.add.text(
-			20,
-			20,
-			`HP: ${this.playerHealth}/${this.maxPlayerHealth}`,
-			{
-				fontFamily: "Arial Black",
-				fontSize: "24px",
-				color: "#ffffff",
-				stroke: "#000000",
-				strokeThickness: 4,
-			}
-		);
-		this.healthText.setScrollFactor(0);
-		this.healthText.setDepth(100);
+		// Create heart icons for health display
+		const heartSpacing = 36;
+		const startX = 20;
+		const startY = 20;
+
+		for (let i = 0; i < this.maxPlayerHealth; i++) {
+			const heart = this.add.image(
+				startX + i * heartSpacing,
+				startY,
+				i < this.playerHealth ? "heart" : "heart-empty"
+			);
+			heart.setOrigin(0, 0);
+			heart.setScrollFactor(0);
+			heart.setDepth(100);
+			heart.setScale(1);
+			this.heartIcons.push(heart);
+		}
 	}
 
 	handleMonsterPlayerCollision(monsterSprite: Phaser.Physics.Arcade.Sprite) {
@@ -172,13 +180,19 @@ export class Game extends Scene {
 			this.player.clearTint();
 		});
 
-		// Update UI
-		this.healthText.setText(
-			`HP: ${Math.max(0, this.playerHealth)}/${this.maxPlayerHealth}`
-		);
+		// Update heart icons
+		this.updateHeartDisplay();
 
 		if (this.playerHealth <= 0) {
 			this.gameOver();
+		}
+	}
+
+	updateHeartDisplay() {
+		for (let i = 0; i < this.heartIcons.length; i++) {
+			this.heartIcons[i].setTexture(
+				i < this.playerHealth ? "heart" : "heart-empty"
+			);
 		}
 	}
 
@@ -231,30 +245,10 @@ export class Game extends Scene {
 		}
 	}
 
-	createGrassBackground() {
+	createBackground() {
 		const graphics = this.add.graphics();
-
-		graphics.fillStyle(0x4a7c23, 1);
+		graphics.fillStyle(0x0c1317, 1);
 		graphics.fillRect(0, 0, this.WORLD_WIDTH, this.WORLD_HEIGHT);
-
-		const tileSize = 64;
-		for (let x = 0; x < this.WORLD_WIDTH; x += tileSize) {
-			for (let y = 0; y < this.WORLD_HEIGHT; y += tileSize) {
-				if ((x / tileSize + y / tileSize) % 2 === 0) {
-					graphics.fillStyle(0x3d6b1c, 1);
-					graphics.fillRect(x, y, tileSize, tileSize);
-				}
-
-				if (Math.random() > 0.7) {
-					graphics.fillStyle(0x5a8c33, 1);
-					graphics.fillCircle(
-						x + Math.random() * tileSize,
-						y + Math.random() * tileSize,
-						3
-					);
-				}
-			}
-		}
 	}
 
 	update(time: number) {

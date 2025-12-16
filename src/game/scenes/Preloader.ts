@@ -38,6 +38,10 @@ export class Preloader extends Scene
         
         // Monsters
         this.load.image('goblin', 'monsters/monster001.png');
+        
+        // UI
+        this.load.image('heart', 'ui/heart.png');
+        this.load.image('heart-empty', 'ui/heart-empty.png');
     }
 
     create ()

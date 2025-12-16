@@ -6,7 +6,7 @@ export interface GoblinConfig extends Partial<MonsterConfig> {}
 const DEFAULT_GOBLIN_CONFIG: MonsterConfig = {
 	maxHealth: 50,
 	speed: 80,
-	damage: 10,
+	damage: 1,
 	spriteKey: "goblin",
 	scale: 1.5,
 	knockbackForce: 200,
